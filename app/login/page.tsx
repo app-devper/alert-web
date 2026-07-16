@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ApiError, setStaffToken, umLogin } from "@/lib/api";
+import { ApiError, resolveAlertHostFromUmSystem, setStaffToken, umLogin } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -19,6 +19,7 @@ export default function LoginPage() {
       try {
         const token = await umLogin(username, password);
         setStaffToken(token);
+        await resolveAlertHostFromUmSystem(token);
         router.push("/dashboard");
       } catch (err) {
         setError(err instanceof ApiError ? err.message : "เข้าสู่ระบบไม่สำเร็จ");

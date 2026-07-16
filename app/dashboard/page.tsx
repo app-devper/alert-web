@@ -3,7 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ApiError, clearStaffToken, staffGet, staffPost, staffToken } from "@/lib/api";
+import {
+  ApiError,
+  clearAlertHost,
+  clearStaffToken,
+  staffGet,
+  staffPost,
+  staffToken,
+} from "@/lib/api";
 
 const EVENT_BUTTONS = [
   { type: "FIRE", emoji: "🔥", label: "ไฟไหม้", color: "bg-red-600" },
@@ -57,6 +64,7 @@ export default function DashboardPage() {
       .catch((err) => {
         if (err instanceof ApiError && err.status === 401) {
           clearStaffToken();
+          clearAlertHost();
           router.push("/login");
         }
       });
