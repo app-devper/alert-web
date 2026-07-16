@@ -1,0 +1,17 @@
+{
+  "name": "devper-alert",
+  "short_name": "Alert",
+  "description": "ระบบแจ้งเตือนเหตุฉุกเฉินภายในสถานที่",
+  "start_url": "/status",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#dc2626",
+  "lang": "th",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
