@@ -107,7 +107,7 @@ export default function DashboardPage() {
         <StatCard label="ลูกค้าที่อยู่ในร้าน" value={summary?.activeCheckIns} highlight />
         <StatCard label="จำนวนคนรวม" value={summary?.totalPeople} />
         <StatCard label="เปิด Web Push" value={summary?.pushEnabled} />
-        <StatCard label="เชื่อม LINE" value={summary?.lineEnabled} />
+        <StatCard label="รับทาง LINE (LON)" value={summary?.lineEnabled} />
       </section>
 
       {error && <div className="mb-4 rounded-lg bg-red-50 p-3 text-red-700">{error}</div>}

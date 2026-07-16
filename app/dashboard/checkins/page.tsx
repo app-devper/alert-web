@@ -12,7 +12,6 @@ interface CheckInItem {
   groupSize: number;
   checkedInAt: string;
   hasPush: boolean;
-  hasLine: boolean;
 }
 
 export default function CheckinsPage() {
@@ -83,8 +82,7 @@ export default function CheckinsPage() {
                   {new Date(item.checkedInAt).toLocaleTimeString("th-TH")}
                 </td>
                 <td className="p-3">
-                  📱{item.hasPush ? " 🔔" : ""}
-                  {item.hasLine ? " 💬" : ""}
+                  📱 💬{item.hasPush ? " 🔔" : ""}
                 </td>
                 <td className="p-3 text-right">
                   <button

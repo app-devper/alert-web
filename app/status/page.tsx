@@ -130,7 +130,7 @@ export default function StatusPage() {
               </button>
             )}
           </li>
-          <li>💬 LINE — {status?.channels.line ? "เชื่อมต่อแล้ว" : "ไม่ได้เชื่อมต่อ"}</li>
+          <li>💬 LINE — ส่งตามเบอร์โทรศัพท์โดยอัตโนมัติ (LINE Official Notification)</li>
         </ul>
       </section>
       {isActive && (
