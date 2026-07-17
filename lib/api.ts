@@ -150,7 +150,7 @@ export async function umLogin(username: string, password: string): Promise<strin
   const response = await fetch(`${UM_API_URL}/auth/login`, {
     method: "POST",
     headers: jsonHeaders(),
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify({ username, password, system: "ALERT" }),
   });
   const body = await response.json().catch(() => null);
   if (!response.ok) {
