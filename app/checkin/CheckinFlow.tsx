@@ -309,8 +309,8 @@ function SuccessPanel() {
       <div className="text-5xl">✅</div>
       <h2 className="text-xl font-bold">ลงทะเบียนสำเร็จ</h2>
       <p className="text-slate-600">
-        ท่านจะได้รับการแจ้งเตือนทาง SMS และ LINE (ส่งตามเบอร์โทรศัพท์โดยอัตโนมัติ)
-        หากเกิดเหตุฉุกเฉินระหว่างอยู่ในร้าน
+        ท่านจะได้รับการแจ้งเตือนหากเกิดเหตุฉุกเฉินระหว่างอยู่ในร้าน
+        ตามช่องทางที่ร้านเปิดใช้งาน — เปิดการแจ้งเตือนผ่าน Browser ด้านล่างเพื่อรับเร็วที่สุด
       </p>
       <div className="rounded-xl bg-slate-100 p-4 text-left text-sm">
         <p className="font-semibold">รับแจ้งเตือนเร็วขึ้น (ไม่บังคับ)</p>
@@ -326,7 +326,7 @@ function SuccessPanel() {
         )}
         {pushStatus === "failed" && (
           <p className="mt-2 text-amber-700">
-            เปิดไม่สำเร็จ — ท่านยังคงได้รับ SMS และ LINE ตามปกติ (iOS ต้องเพิ่มหน้านี้ลง Home Screen ก่อน)
+            เปิดไม่สำเร็จ — ท่านยังคงได้รับแจ้งเตือนตามช่องทางอื่นที่ร้านเปิดใช้ (iOS ต้องเพิ่มหน้านี้ลง Home Screen ก่อน)
           </p>
         )}
       </div>
