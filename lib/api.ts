@@ -1,13 +1,11 @@
-const ALERT_API_URL =
-  process.env.NEXT_PUBLIC_ALERT_API_URL ?? "https://api.devper.app/api/alert/v1";
-const UM_API_URL =
-  process.env.NEXT_PUBLIC_UM_API_URL ?? "https://api.devper.app/api/um/v1";
+const DEFAULT_HOST = process.env.NEXT_PUBLIC_API_URL ?? "https://api.devper.app";
+const UM_API_URL = `${DEFAULT_HOST}/api/um/v1`;
 const ALERT_API_BASE_PATH = "/api/alert/v1";
 const ALERT_HOST_KEY = "alert.apiHost";
 
 export function alertHost(): string {
-  if (typeof window === "undefined") return "";
-  return localStorage.getItem(ALERT_HOST_KEY) ?? "";
+  if (typeof window === "undefined") return DEFAULT_HOST;
+  return localStorage.getItem(ALERT_HOST_KEY) ?? DEFAULT_HOST;
 }
 
 export function setAlertHost(host: string) {
@@ -18,12 +16,8 @@ export function clearAlertHost() {
   localStorage.removeItem(ALERT_HOST_KEY);
 }
 
-function staffApiBase(): string {
-  const host = alertHost();
-  if (host) {
-    return `${host}${ALERT_API_BASE_PATH}`;
-  }
-  return ALERT_API_URL;
+function alertApiBase(): string {
+  return `${alertHost()}${ALERT_API_BASE_PATH}`;
 }
 
 export interface Envelope<T> {
@@ -86,11 +80,11 @@ export function clearCustomerToken() {
 }
 
 export async function publicGet<T>(path: string): Promise<Envelope<T>> {
-  return request<T>(`${ALERT_API_URL}${path}`, { headers: jsonHeaders() });
+  return request<T>(alertApiUrl(path), { headers: jsonHeaders() });
 }
 
 export async function publicPost<T>(path: string, body?: unknown): Promise<Envelope<T>> {
-  return request<T>(`${ALERT_API_URL}${path}`, {
+  return request<T>(alertApiUrl(path), {
     method: "POST",
     headers: jsonHeaders(),
     body: body === undefined ? undefined : JSON.stringify(body),
@@ -102,11 +96,11 @@ function customerHeaders(): Record<string, string> {
 }
 
 export async function customerGet<T>(path: string): Promise<Envelope<T>> {
-  return request<T>(`${ALERT_API_URL}${path}`, { headers: customerHeaders() });
+  return request<T>(alertApiUrl(path), { headers: customerHeaders() });
 }
 
 export async function customerPost<T>(path: string, body?: unknown): Promise<Envelope<T>> {
-  return request<T>(`${ALERT_API_URL}${path}`, {
+  return request<T>(alertApiUrl(path), {
     method: "POST",
     headers: customerHeaders(),
     body: body === undefined ? undefined : JSON.stringify(body),
@@ -114,7 +108,7 @@ export async function customerPost<T>(path: string, body?: unknown): Promise<Env
 }
 
 export async function customerDelete<T>(path: string): Promise<Envelope<T>> {
-  return request<T>(`${ALERT_API_URL}${path}`, {
+  return request<T>(alertApiUrl(path), {
     method: "DELETE",
     headers: customerHeaders(),
   });
@@ -124,16 +118,16 @@ function staffHeaders(): Record<string, string> {
   return jsonHeaders({ Authorization: `Bearer ${staffToken()}` });
 }
 
-export function staffApiUrl(path: string): string {
-  return `${staffApiBase()}${path}`;
+export function alertApiUrl(path: string): string {
+  return `${alertApiBase()}${path}`;
 }
 
 export async function staffGet<T>(path: string): Promise<Envelope<T>> {
-  return request<T>(staffApiUrl(path), { headers: staffHeaders() });
+  return request<T>(alertApiUrl(path), { headers: staffHeaders() });
 }
 
 export async function staffPost<T>(path: string, body?: unknown): Promise<Envelope<T>> {
-  return request<T>(staffApiUrl(path), {
+  return request<T>(alertApiUrl(path), {
     method: "POST",
     headers: staffHeaders(),
     body: body === undefined ? undefined : JSON.stringify(body),
@@ -141,7 +135,7 @@ export async function staffPost<T>(path: string, body?: unknown): Promise<Envelo
 }
 
 export async function staffPut<T>(path: string, body?: unknown): Promise<Envelope<T>> {
-  return request<T>(staffApiUrl(path), {
+  return request<T>(alertApiUrl(path), {
     method: "PUT",
     headers: staffHeaders(),
     body: body === undefined ? undefined : JSON.stringify(body),
