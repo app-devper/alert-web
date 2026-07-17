@@ -14,6 +14,7 @@ interface QrInfo {
   shopName: string;
   retentionHours: number;
   contactChannel: string;
+  skipOtp: boolean;
 }
 
 interface OtpInfo {
@@ -22,27 +23,44 @@ interface OtpInfo {
   otpExpiresAt: string;
 }
 
+interface CreateResult {
+  checkInId?: string;
+  refCode?: string;
+  otpExpiresAt?: string;
+  skipOtp?: boolean;
+  sessionToken?: string;
+}
+
 type Step = "loading" | "invalid" | "form" | "otp" | "done";
 
 export default function CheckinFlow() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
-  const [step, setStep] = useState<Step>(token ? "loading" : "invalid");
+  const clientId = searchParams.get("clientId") ?? "";
+  const branchId = searchParams.get("branchId") ?? "";
+  const tableNo = searchParams.get("tableNo") ?? "";
+  const hasTarget = token !== "" || (clientId !== "" && branchId !== "");
+  const [step, setStep] = useState<Step>(hasTarget ? "loading" : "invalid");
   const [qrInfo, setQrInfo] = useState<QrInfo | null>(null);
   const [otpInfo, setOtpInfo] = useState<OtpInfo | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!token) {
+    if (!hasTarget) {
       return;
     }
-    publicGet<QrInfo>(`/public/qr/${token}`)
+    const resolve = token
+      ? publicGet<QrInfo>(`/public/qr/${token}`)
+      : publicGet<QrInfo>(
+          `/public/branch?clientId=${encodeURIComponent(clientId)}&branchId=${encodeURIComponent(branchId)}${tableNo ? `&tableNo=${encodeURIComponent(tableNo)}` : ""}`
+        );
+    resolve
       .then((response) => {
         setQrInfo(response.data);
         setStep("form");
       })
       .catch(() => setStep("invalid"));
-  }, [token]);
+  }, [hasTarget, token, clientId, branchId, tableNo]);
 
   if (step === "loading") {
     return <main className="p-6 text-center text-slate-500">กำลังโหลด…</main>;
@@ -51,7 +69,7 @@ export default function CheckinFlow() {
     return (
       <main className="mx-auto max-w-md p-6 text-center">
         <div className="text-4xl">⚠️</div>
-        <h1 className="mt-4 text-xl font-bold">QR Code ไม่ถูกต้องหรือถูกยกเลิกแล้ว</h1>
+        <h1 className="mt-4 text-xl font-bold">ลิงก์ลงทะเบียนไม่ถูกต้องหรือถูกยกเลิกแล้ว</h1>
         <p className="mt-2 text-slate-600">กรุณาสแกน QR Code ใหม่จากภายในร้าน หรือติดต่อพนักงาน</p>
       </main>
     );
@@ -75,9 +93,18 @@ export default function CheckinFlow() {
           token={token}
           qrInfo={qrInfo}
           onError={setError}
-          onOtpSent={(info) => {
-            setOtpInfo(info);
+          onSubmitted={(result) => {
             setError("");
+            if (result.skipOtp && result.sessionToken) {
+              setCustomerToken(result.sessionToken);
+              setStep("done");
+              return;
+            }
+            setOtpInfo({
+              checkInId: result.checkInId ?? "",
+              refCode: result.refCode ?? "",
+              otpExpiresAt: result.otpExpiresAt ?? "",
+            });
             setStep("otp");
           }}
         />
@@ -100,12 +127,12 @@ export default function CheckinFlow() {
 function CheckinForm({
   token,
   qrInfo,
-  onOtpSent,
+  onSubmitted,
   onError,
 }: {
   token: string;
   qrInfo: QrInfo;
-  onOtpSent: (info: OtpInfo) => void;
+  onSubmitted: (result: CreateResult) => void;
   onError: (message: string) => void;
 }) {
   const [phone, setPhone] = useState("");
@@ -123,8 +150,11 @@ function CheckinForm({
     }
     setSubmitting(true);
     try {
-      const response = await publicPost<OtpInfo>("/public/check-ins", {
-        qrToken: token,
+      const target = token
+        ? { qrToken: token }
+        : { clientId: qrInfo.clientId, branchId: qrInfo.branchId };
+      const response = await publicPost<CreateResult>("/public/check-ins", {
+        ...target,
         phone,
         groupSize,
         tableNo,
@@ -133,13 +163,25 @@ function CheckinForm({
         privacyNoticeVersion: PRIVACY_NOTICE_VERSION,
         marketingConsent: marketing,
       });
-      onOtpSent(response.data);
+      onSubmitted(response.data);
     } catch (err) {
       onError(err instanceof ApiError ? err.message : "เกิดข้อผิดพลาด กรุณาลองใหม่");
     } finally {
       setSubmitting(false);
     }
-  }, [acceptPrivacy, token, phone, groupSize, tableNo, language, marketing, onError, onOtpSent]);
+  }, [
+    acceptPrivacy,
+    token,
+    qrInfo.clientId,
+    qrInfo.branchId,
+    phone,
+    groupSize,
+    tableNo,
+    language,
+    marketing,
+    onError,
+    onSubmitted,
+  ]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -216,7 +258,11 @@ function CheckinForm({
         disabled={submitting || !phone || !acceptPrivacy}
         className="rounded-xl bg-red-600 p-4 text-lg font-bold text-white disabled:opacity-40"
       >
-        {submitting ? "กำลังส่งรหัส OTP…" : "รับรหัส OTP"}
+        {submitting
+          ? "กำลังลงทะเบียน…"
+          : qrInfo.skipOtp
+            ? "ลงทะเบียน"
+            : "รับรหัส OTP"}
       </button>
     </div>
   );
