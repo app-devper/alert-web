@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { ApiError, staffGet, staffPut } from "@/lib/api";
 
 interface MaskedConfig {
+  smsEnabled: boolean;
+  lineEnabled: boolean;
   smsApiUrl: string;
   smsBalanceUrl: string;
   smsSenderId: string;
@@ -15,6 +17,8 @@ interface MaskedConfig {
 }
 
 interface ConfigForm {
+  smsEnabled: boolean;
+  lineEnabled: boolean;
   smsApiUrl: string;
   smsBalanceUrl: string;
   smsSenderId: string;
@@ -26,6 +30,8 @@ interface ConfigForm {
 }
 
 const EMPTY_FORM: ConfigForm = {
+  smsEnabled: false,
+  lineEnabled: false,
   smsApiUrl: "",
   smsBalanceUrl: "",
   smsSenderId: "",
@@ -51,6 +57,8 @@ export default function MessagingConfigTab({
         setMasked(response.data);
         setForm((current) => ({
           ...current,
+          smsEnabled: response.data.smsEnabled,
+          lineEnabled: response.data.lineEnabled,
           smsApiUrl: response.data.smsApiUrl,
           smsBalanceUrl: response.data.smsBalanceUrl,
           smsSenderId: response.data.smsSenderId,
@@ -90,6 +98,36 @@ export default function MessagingConfigTab({
 
   return (
     <div className="space-y-4 text-sm">
+      <div className="rounded-xl bg-white p-4 shadow-sm">
+        <p className="font-semibold">ช่องทางแจ้งเตือน</p>
+        <p className="mt-1 text-xs text-slate-500">
+          🔔 Web Push เปิดใช้งานเสมอ (ไม่มีค่าใช้จ่าย) — SMS และ LINE เป็นช่องทางเสริมที่มีค่าใช้จ่ายต่อข้อความ
+          เปิดใช้เมื่อตั้งค่า gateway/OA ด้านล่างแล้ว
+        </p>
+        <label className="mt-3 flex items-center gap-3">
+          <input
+            type="checkbox"
+            checked={form.smsEnabled}
+            onChange={(event) =>
+              setForm((current) => ({ ...current, smsEnabled: event.target.checked }))
+            }
+            className="h-5 w-5"
+          />
+          <span className="font-medium">📱 เปิดส่ง SMS</span>
+        </label>
+        <label className="mt-2 flex items-center gap-3">
+          <input
+            type="checkbox"
+            checked={form.lineEnabled}
+            onChange={(event) =>
+              setForm((current) => ({ ...current, lineEnabled: event.target.checked }))
+            }
+            className="h-5 w-5"
+          />
+          <span className="font-medium">💬 เปิดส่ง LINE (LON)</span>
+        </label>
+      </div>
+
       <div className="rounded-xl bg-white p-4 shadow-sm">
         <p className="font-semibold">SMS Gateway ของร้าน (แยกต่อ client)</p>
         <p className="mt-1 text-xs text-slate-500">
