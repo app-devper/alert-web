@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ApiError, staffGet, staffPost, staffPut } from "@/lib/api";
+import { ApiError, alertApiUrl, staffGet, staffPost, staffPut } from "@/lib/api";
 
-type Tab = "templates" | "settings" | "qr" | "permissions";
+import MessagingConfigTab from "./MessagingConfigTab";
+
+type Tab = "templates" | "settings" | "messaging" | "qr" | "permissions";
 
 export default function AdminPage() {
   const [tab, setTab] = useState<Tab>("templates");
@@ -23,6 +25,7 @@ export default function AdminPage() {
           [
             ["templates", "ข้อความสำเร็จรูป"],
             ["settings", "ตั้งค่าสาขา & PIN"],
+            ["messaging", "SMS & LINE"],
             ["qr", "QR Code"],
             ["permissions", "สิทธิ์พนักงาน"],
           ] as [Tab, string][]
@@ -46,6 +49,7 @@ export default function AdminPage() {
       )}
       {tab === "templates" && <TemplatesTab onMessage={setMessage} />}
       {tab === "settings" && <SettingsTab onMessage={setMessage} />}
+      {tab === "messaging" && <MessagingConfigTab onMessage={setMessage} />}
       {tab === "qr" && <QrTab onMessage={setMessage} />}
       {tab === "permissions" && <PermissionsTab onMessage={setMessage} />}
     </main>
@@ -405,7 +409,7 @@ function QrTab({ onMessage }: { onMessage: (m: string) => void }) {
             {token.active && (
               <div className="flex gap-3 text-sm">
                 <a
-                  href={`${process.env.NEXT_PUBLIC_ALERT_API_URL ?? "https://api.devper.app/api/alert/v1"}/admin/qr/${token.id}/image`}
+                  href={alertApiUrl(`/admin/qr/${token.id}/image`)}
                   target="_blank"
                   rel="noreferrer"
                   className="text-slate-600 underline"

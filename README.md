@@ -19,8 +19,9 @@ npm run build        # static export → out/
 npm run lint
 ```
 
-ต้องตั้ง `NEXT_PUBLIC_ALERT_API_URL` และ `NEXT_PUBLIC_UM_API_URL` ตอน build
-(ดู `.env.example`)
+Env ตัวเดียว: `NEXT_PUBLIC_API_URL=https://api.devper.app` (host ของ um-api และ default host)
+— ALERT API host ตัวจริง resolve ตอน runtime จาก UM system record (`GET /auth/system`)
+หลัง staff login; ถ้าดึงไม่ได้/ยังไม่ login ใช้ default host เดียวกันนี้ ต่อ path `/api/alert/v1`
 
 ข้อจำกัด static export: ไม่มี middleware / dynamic route handlers / ISR
 Service worker สำหรับ Web Push อยู่ที่ `public/sw.js` (iOS Safari ต้อง Add to Home Screen ก่อน)

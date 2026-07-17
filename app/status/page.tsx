@@ -121,7 +121,6 @@ export default function StatusPage() {
       <section className="mt-4 rounded-xl bg-white p-4 shadow-sm text-sm">
         <p className="font-semibold">ช่องทางแจ้งเตือนที่เปิดอยู่</p>
         <ul className="mt-2 space-y-1">
-          <li>📱 SMS — เปิดเสมอ</li>
           <li>
             🔔 Web Push — {status?.channels.push ? "เปิด" : "ปิด"}
             {!status?.channels.push && isActive && (
@@ -130,7 +129,13 @@ export default function StatusPage() {
               </button>
             )}
           </li>
-          <li>💬 LINE — {status?.channels.line ? "เชื่อมต่อแล้ว" : "ไม่ได้เชื่อมต่อ"}</li>
+          <li>📱 SMS — {status?.channels.sms ? "เปิด" : "ร้านไม่ได้เปิดใช้"}</li>
+          <li>
+            💬 LINE —{" "}
+            {status?.channels.line
+              ? "เปิด (ส่งตามเบอร์โทรศัพท์อัตโนมัติ)"
+              : "ร้านไม่ได้เปิดใช้"}
+          </li>
         </ul>
       </section>
       {isActive && (
