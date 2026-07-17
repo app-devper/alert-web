@@ -71,7 +71,7 @@ function TemplatesTab({ onMessage }: { onMessage: (m: string) => void }) {
 
   const load = useCallback(() => {
     staffGet<Template[]>("/admin/templates")
-      .then((response) => setTemplates(response.data))
+      .then((response) => setTemplates(response.data ?? []))
       .catch((err) => onMessage(err instanceof ApiError ? err.message : "โหลดไม่สำเร็จ"));
   }, [onMessage]);
 
@@ -333,7 +333,7 @@ function QrTab({ onMessage }: { onMessage: (m: string) => void }) {
 
   const load = useCallback(() => {
     staffGet<QrToken[]>("/admin/qr")
-      .then((response) => setTokens(response.data))
+      .then((response) => setTokens(response.data ?? []))
       .catch((err) => onMessage(err instanceof ApiError ? err.message : "โหลดไม่สำเร็จ"));
   }, [onMessage]);
 
@@ -461,7 +461,7 @@ function PermissionsTab({ onMessage }: { onMessage: (m: string) => void }) {
 
   const load = useCallback(() => {
     staffGet<Permission[]>("/admin/permissions")
-      .then((response) => setPermissions(response.data))
+      .then((response) => setPermissions(response.data ?? []))
       .catch((err) => onMessage(err instanceof ApiError ? err.message : "โหลดไม่สำเร็จ"));
   }, [onMessage]);
 
