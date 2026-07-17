@@ -22,7 +22,7 @@ export default function CheckinsPage() {
   const load = useCallback(() => {
     const query = search ? `?search=${encodeURIComponent(search)}` : "";
     staffGet<CheckInItem[]>(`/dashboard/check-ins${query}`)
-      .then((response) => setItems(response.data))
+      .then((response) => setItems(response.data ?? []))
       .catch((err) =>
         setMessage(err instanceof ApiError ? err.message : "โหลดรายชื่อไม่สำเร็จ")
       );
