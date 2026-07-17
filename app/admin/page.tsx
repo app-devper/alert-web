@@ -2,7 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ApiError, alertApiUrl, staffGet, staffPost, staffPut } from "@/lib/api";
+import {
+  ApiError,
+  alertApiUrl,
+  staffClientId,
+  staffGet,
+  staffPost,
+  staffPut,
+} from "@/lib/api";
 
 import MessagingConfigTab from "./MessagingConfigTab";
 
@@ -169,6 +176,7 @@ interface BranchSetting {
   retentionHours: number;
   cooldownSeconds: number;
   confirmMethod: string;
+  skipOtp: boolean;
   smsCreditThreshold: number;
   contactChannel: string;
 }
@@ -263,6 +271,20 @@ function SettingsTab({ onMessage }: { onMessage: (m: string) => void }) {
             <option value="HOLD_3S">กดค้าง 3 วินาที</option>
             <option value="PIN">Emergency PIN</option>
           </select>
+        </label>
+        <label className="mt-3 flex items-start gap-3 text-sm">
+          <input
+            type="checkbox"
+            checked={setting.skipOtp}
+            onChange={(event) => setSetting({ ...setting, skipOtp: event.target.checked })}
+            className="mt-1 h-5 w-5"
+          />
+          <span>
+            <span className="font-medium">ข้ามขั้นตอน OTP</span>
+            <span className="mt-0.5 block text-xs text-slate-500">
+              ลูกค้ากรอกข้อมูล+ยอมรับเงื่อนไขแล้วลงทะเบียนได้ทันที ไม่ต้องยืนยัน OTP (ไม่ส่ง SMS OTP)
+            </span>
+          </span>
         </label>
         <label className="mt-3 block text-sm">
           <span className="font-medium">ช่องทางติดต่อผู้ควบคุมข้อมูล (PDPA)</span>
@@ -363,6 +385,17 @@ function QrTab({ onMessage }: { onMessage: (m: string) => void }) {
     [load, onMessage]
   );
 
+  const directLink =
+    typeof window !== "undefined" && staffClientId()
+      ? `${window.location.origin}/checkin?clientId=${staffClientId()}&branchId=${encodeURIComponent(branchId)}${tableNo ? `&tableNo=${encodeURIComponent(tableNo)}` : ""}`
+      : "";
+
+  const copyDirectLink = useCallback(() => {
+    if (!directLink) return;
+    navigator.clipboard?.writeText(directLink);
+    onMessage("คัดลอกลิงก์ลงทะเบียนแล้ว");
+  }, [directLink, onMessage]);
+
   return (
     <div className="space-y-4">
       <div className="rounded-xl bg-white p-4 shadow-sm">
@@ -387,6 +420,20 @@ function QrTab({ onMessage }: { onMessage: (m: string) => void }) {
             สร้าง
           </button>
         </div>
+        {directLink && (
+          <div className="mt-3 rounded-lg bg-slate-100 p-3 text-xs">
+            <p className="font-semibold text-slate-700">
+              ลิงก์ลงทะเบียนโดยตรง (ไม่ต้องสร้าง QR)
+            </p>
+            <p className="mt-1 break-all font-mono text-slate-500">{directLink}</p>
+            <button
+              onClick={copyDirectLink}
+              className="mt-2 rounded-lg bg-slate-800 px-3 py-1.5 font-semibold text-white"
+            >
+              คัดลอกลิงก์
+            </button>
+          </div>
+        )}
       </div>
       <div className="space-y-2">
         {tokens.map((token) => (
