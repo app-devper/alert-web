@@ -4,7 +4,7 @@ on:
   pull_request:
   workflow_dispatch:
   push:
-    branches: [main, develop]
+    branches: [main, develop, "feature/**", "release/**", "hotfix/**"]
 
 jobs:
   build:
