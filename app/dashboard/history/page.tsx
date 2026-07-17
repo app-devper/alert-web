@@ -42,7 +42,7 @@ export default function HistoryPage() {
   const load = useCallback(() => {
     staffGet<EventItem[]>(`/dashboard/events?page=${page}&limit=20`)
       .then((response) => {
-        setEvents(response.data);
+        setEvents(response.data ?? []);
         setTotal(response.meta?.total ?? 0);
       })
       .catch((err) =>
