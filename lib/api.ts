@@ -66,6 +66,19 @@ export function clearStaffToken() {
   localStorage.removeItem("alert.staffToken");
 }
 
+export function staffClientId(): string {
+  const parts = staffToken().split(".");
+  if (parts.length < 2) return "";
+  try {
+    const payload = JSON.parse(
+      atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"))
+    ) as { clientId?: string };
+    return payload.clientId ?? "";
+  } catch {
+    return "";
+  }
+}
+
 export function customerToken(): string {
   if (typeof window === "undefined") return "";
   return localStorage.getItem("alert.sessionToken") ?? "";
