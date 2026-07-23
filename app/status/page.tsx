@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { ApiError, clearCustomerToken, customerGet, customerPost } from "@/lib/api";
-import { subscribeWebPush } from "@/lib/push";
+import { isLikelyInAppBrowser, subscribeWebPush } from "@/lib/push";
 
 interface MyStatus {
   checkInNo: string;
@@ -61,14 +61,24 @@ export default function StatusPage() {
   }, []);
 
   const enablePush = useCallback(async () => {
-    try {
-      if (await subscribeWebPush()) {
+    const result = await subscribeWebPush();
+    switch (result.status) {
+      case "subscribed":
         load();
-      } else {
-        setMessage("เปิด Web Push ไม่สำเร็จ (ต้องอนุญาต Notification)");
-      }
-    } catch {
-      setMessage("เปิด Web Push ไม่สำเร็จ");
+        break;
+      case "unsupported":
+        setMessage(
+          isLikelyInAppBrowser()
+            ? "เบราว์เซอร์ในแอป (เช่น LINE) ไม่รองรับการแจ้งเตือน — กรุณาเปิดลิงก์นี้ด้วย Safari หรือ Chrome"
+            : "เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือนผ่าน Browser",
+        );
+        break;
+      case "denied":
+        setMessage("ท่านปฏิเสธการอนุญาตแจ้งเตือน — เปิดได้ที่ตั้งค่าเบราว์เซอร์แล้วลองใหม่");
+        break;
+      case "error":
+        setMessage(`เปิด Web Push ไม่สำเร็จ (${result.message})`);
+        break;
     }
   }, [load]);
 
