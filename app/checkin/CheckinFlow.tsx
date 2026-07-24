@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ApiError, publicGet, publicPost, setCustomerToken } from "@/lib/api";
-import { subscribeWebPush } from "@/lib/push";
+import { isLikelyInAppBrowser, subscribeWebPush, type SubscribeResult } from "@/lib/push";
 
 const PRIVACY_NOTICE_VERSION = "1.0";
 
@@ -337,17 +337,26 @@ function OtpForm({
   );
 }
 
+function pushFailureMessage(result: Exclude<SubscribeResult, { status: "subscribed" }>): string {
+  switch (result.status) {
+    case "unsupported":
+      return isLikelyInAppBrowser()
+        ? "เบราว์เซอร์ในแอป (เช่น LINE) ไม่รองรับการแจ้งเตือน — กรุณาเปิดลิงก์นี้ด้วย Safari หรือ Chrome"
+        : "เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือนผ่าน Browser (iOS ต้องเพิ่มหน้านี้ลง Home Screen ก่อน)";
+    case "denied":
+      return "ท่านปฏิเสธการอนุญาตแจ้งเตือน — เปิดได้ที่ตั้งค่าเบราว์เซอร์แล้วลองใหม่";
+    case "error":
+      return `เปิดไม่สำเร็จ (${result.message}) — ท่านยังคงได้รับแจ้งเตือนตามช่องทางอื่นที่ร้านเปิดใช้`;
+  }
+}
+
 function SuccessPanel() {
   const router = useRouter();
-  const [pushStatus, setPushStatus] = useState<"idle" | "enabled" | "failed">("idle");
+  const [pushResult, setPushResult] = useState<SubscribeResult | null>(null);
 
   const enablePush = useCallback(async () => {
-    try {
-      const success = await subscribeWebPush();
-      setPushStatus(success ? "enabled" : "failed");
-    } catch {
-      setPushStatus("failed");
-    }
+    const result = await subscribeWebPush();
+    setPushResult(result);
   }, []);
 
   return (
@@ -360,7 +369,7 @@ function SuccessPanel() {
       </p>
       <div className="rounded-xl bg-slate-100 p-4 text-left text-sm">
         <p className="font-semibold">รับแจ้งเตือนเร็วขึ้น (ไม่บังคับ)</p>
-        {pushStatus === "enabled" ? (
+        {pushResult?.status === "subscribed" ? (
           <p className="mt-2 text-green-700">✓ เปิดการแจ้งเตือนผ่าน Browser แล้ว</p>
         ) : (
           <button
@@ -370,10 +379,8 @@ function SuccessPanel() {
             🔔 อนุญาตการแจ้งเตือนผ่าน Browser
           </button>
         )}
-        {pushStatus === "failed" && (
-          <p className="mt-2 text-amber-700">
-            เปิดไม่สำเร็จ — ท่านยังคงได้รับแจ้งเตือนตามช่องทางอื่นที่ร้านเปิดใช้ (iOS ต้องเพิ่มหน้านี้ลง Home Screen ก่อน)
-          </p>
+        {pushResult && pushResult.status !== "subscribed" && (
+          <p className="mt-2 text-amber-700">{pushFailureMessage(pushResult)}</p>
         )}
       </div>
       <button
