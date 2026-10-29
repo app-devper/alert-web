@@ -1,5 +1,5 @@
 const DEFAULT_HOST = process.env.NEXT_PUBLIC_API_URL ?? "https://api.devper.app";
-const UM_API_URL = `${DEFAULT_HOST}/api/um/v1`;
+export const UM_API_URL = `${DEFAULT_HOST}/api/um/v1`;
 const ALERT_API_BASE_PATH = "/api/alert/v1";
 const ALERT_HOST_KEY = "alert.apiHost";
 
@@ -49,7 +49,7 @@ async function request<T>(url: string, init: RequestInit): Promise<Envelope<T>> 
   return body as Envelope<T>;
 }
 
-function jsonHeaders(extra: Record<string, string> = {}): Record<string, string> {
+export function jsonHeaders(extra: Record<string, string> = {}): Record<string, string> {
   return { "Content-Type": "application/json", ...extra };
 }
 
