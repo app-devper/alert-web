@@ -176,6 +176,36 @@ export async function umLogin(username: string, password: string): Promise<strin
   return token;
 }
 
+/** Exchanges the one-time ticket UM's Apps page hands over (um-api ADR-0011). */
+export async function umExchange(ticket: string): Promise<string> {
+  const response = await fetch(`${UM_API_URL}/auth/exchange`, {
+    method: "POST",
+    headers: jsonHeaders(),
+    body: JSON.stringify({ ticket }),
+  });
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new ApiError("TICKET_REFUSED", "ลิงก์จาก UM หมดอายุหรือถูกใช้ไปแล้ว เปิดจาก UM อีกครั้งหรือเข้าสู่ระบบ", response.status);
+  }
+  const token = (body as LoginResponse)?.accessToken;
+  if (!token) {
+    throw new ApiError("LOGIN_FAILED", "ไม่พบ token จากระบบยืนยันตัวตน", 500);
+  }
+  return token;
+}
+
+/** The System a UM token is for. */
+export async function umSystemCode(token: string): Promise<string> {
+  const response = await fetch(`${UM_API_URL}/auth/system`, {
+    headers: jsonHeaders({ Authorization: `Bearer ${token}` }),
+  });
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new ApiError("LOGIN_FAILED", "ตรวจสอบระบบไม่สำเร็จ", response.status);
+  }
+  return body?.systemCode ?? body?.data?.systemCode ?? "";
+}
+
 export async function resolveAlertHostFromUmSystem(token: string): Promise<void> {
   try {
     const response = await fetch(`${UM_API_URL}/auth/system`, {
