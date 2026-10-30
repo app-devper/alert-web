@@ -25,3 +25,11 @@ Env ตัวเดียว: `NEXT_PUBLIC_API_URL=https://api.devper.app` (host
 
 ข้อจำกัด static export: ไม่มี middleware / dynamic route handlers / ISR
 Service worker สำหรับ Web Push อยู่ที่ `public/sw.js` (iOS Safari ต้อง Add to Home Screen ก่อน)
+
+## Agent skills
+
+The generic Claude Code / Codex skills (`coding-standards`, `tdd-workflow`,
+`grilling`, …) and the `ecc` rules are not in this repo. Every app-devper
+repo shares them from [app-devper/agent-skills](https://github.com/app-devper/agent-skills):
+clone it and run its `install.sh` once per machine. Only the skills about this
+repo live in `.claude/skills/`: `dev-flow`, `git-flow`, `pr`.
