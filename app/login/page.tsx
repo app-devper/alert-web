@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, resolveAlertHostFromUmSystem, setStaffToken, umLogin } from "@/lib/api";
 import { passkeysSupported, umPasskeyLogin } from "@/lib/passkey";
+import { usePasskeyAutofill, type AutofillRequest } from "@/lib/use-passkey-autofill";
 
 const noSubscription = () => () => {};
 
@@ -17,23 +18,52 @@ export default function LoginPage() {
   // Prerendered without a browser: show the passkey button only once hydrated.
   const passkeyAvailable = useSyncExternalStore(noSubscription, passkeysSupported, () => false);
 
+  // The passkey may answer long after its request started; send the username as typed then.
+  const typedUsername = useRef("");
+  useEffect(() => {
+    typedUsername.current = username;
+  }, [username]);
+
+  const finish = useCallback(
+    async (getToken: () => Promise<string>) => {
+      const token = await getToken();
+      setStaffToken(token);
+      await resolveAlertHostFromUmSystem(token);
+      router.push("/dashboard");
+    },
+    [router]
+  );
+
   const signIn = useCallback(
     async (getToken: () => Promise<string>, fallback: string) => {
       setSubmitting(true);
       setError("");
       try {
-        const token = await getToken();
-        setStaffToken(token);
-        await resolveAlertHostFromUmSystem(token);
-        router.push("/dashboard");
+        await finish(getToken);
       } catch (err) {
         setError(err instanceof ApiError ? err.message : fallback);
       } finally {
         setSubmitting(false);
       }
     },
-    [router]
+    [finish]
   );
+
+  const autofillLogin = useCallback(
+    (request: AutofillRequest) => finish(() => umPasskeyLogin(typedUsername.current, request)),
+    [finish]
+  );
+  const showPasskeyError = useCallback(
+    (err: unknown) => setError(err instanceof ApiError ? err.message : "เข้าสู่ระบบด้วย passkey ไม่สำเร็จ"),
+    []
+  );
+  const autofill = usePasskeyAutofill(passkeyAvailable, autofillLogin, showPasskeyError);
+
+  const signInWithPasskey = useCallback(async () => {
+    autofill.pause(); // a browser runs one passkey request at a time
+    await signIn(() => umPasskeyLogin(typedUsername.current), "เข้าสู่ระบบด้วย passkey ไม่สำเร็จ");
+    autofill.resume();
+  }, [autofill, signIn]);
 
   const submit = useCallback(
     async (event: React.FormEvent) => {
@@ -58,7 +88,7 @@ export default function LoginPage() {
           value={username}
           onChange={(event) => setUsername(event.target.value)}
           placeholder="ชื่อผู้ใช้"
-          autoComplete="username"
+          autoComplete="username webauthn"
           className="rounded-xl border border-slate-300 p-3"
         />
         <input
@@ -81,7 +111,7 @@ export default function LoginPage() {
             <p className="text-center text-xs text-slate-400">หรือ</p>
             <button
               type="button"
-              onClick={() => signIn(umPasskeyLogin, "เข้าสู่ระบบด้วย passkey ไม่สำเร็จ")}
+              onClick={signInWithPasskey}
               disabled={submitting}
               className="rounded-xl border border-slate-300 p-4 font-bold text-slate-800 disabled:opacity-40"
             >
