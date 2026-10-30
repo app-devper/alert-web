@@ -1,8 +1,11 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, resolveAlertHostFromUmSystem, setStaffToken, umLogin } from "@/lib/api";
+import { passkeysSupported, umPasskeyLogin } from "@/lib/passkey";
+
+const noSubscription = () => () => {};
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,23 +14,33 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const submit = useCallback(
-    async (event: React.FormEvent) => {
-      event.preventDefault();
+  // Prerendered without a browser: show the passkey button only once hydrated.
+  const passkeyAvailable = useSyncExternalStore(noSubscription, passkeysSupported, () => false);
+
+  const signIn = useCallback(
+    async (getToken: () => Promise<string>, fallback: string) => {
       setSubmitting(true);
       setError("");
       try {
-        const token = await umLogin(username, password);
+        const token = await getToken();
         setStaffToken(token);
         await resolveAlertHostFromUmSystem(token);
         router.push("/dashboard");
       } catch (err) {
-        setError(err instanceof ApiError ? err.message : "เข้าสู่ระบบไม่สำเร็จ");
+        setError(err instanceof ApiError ? err.message : fallback);
       } finally {
         setSubmitting(false);
       }
     },
-    [username, password, router]
+    [router]
+  );
+
+  const submit = useCallback(
+    async (event: React.FormEvent) => {
+      event.preventDefault();
+      await signIn(() => umLogin(username, password), "เข้าสู่ระบบไม่สำเร็จ");
+    },
+    [username, password, signIn]
   );
 
   return (
@@ -63,6 +76,20 @@ export default function LoginPage() {
         >
           {submitting ? "กำลังเข้าสู่ระบบ…" : "เข้าสู่ระบบ"}
         </button>
+        {passkeyAvailable && (
+          <>
+            <p className="text-center text-xs text-slate-400">หรือ</p>
+            <button
+              type="button"
+              onClick={() => signIn(umPasskeyLogin, "เข้าสู่ระบบด้วย passkey ไม่สำเร็จ")}
+              disabled={submitting}
+              className="rounded-xl border border-slate-300 p-4 font-bold text-slate-800 disabled:opacity-40"
+            >
+              เข้าสู่ระบบด้วย passkey
+            </button>
+            <p className="text-center text-xs text-slate-500">เพิ่ม passkey ได้ที่ um.devper.app หน้าโปรไฟล์</p>
+          </>
+        )}
       </form>
     </main>
   );
