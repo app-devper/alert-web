@@ -350,7 +350,7 @@ interface QrToken {
 
 function QrTab({ onMessage }: { onMessage: (m: string) => void }) {
   const [tokens, setTokens] = useState<QrToken[]>([]);
-  const [branchId, setBranchId] = useState("HQ");
+  const [branchId, setBranchId] = useState("");
   const [tableNo, setTableNo] = useState("");
 
   const load = useCallback(() => {
@@ -405,6 +405,7 @@ function QrTab({ onMessage }: { onMessage: (m: string) => void }) {
             value={branchId}
             onChange={(event) => setBranchId(event.target.value)}
             placeholder="สาขา"
+            required
             className="w-28 rounded-xl border border-slate-300 p-3"
           />
           <input
@@ -415,6 +416,7 @@ function QrTab({ onMessage }: { onMessage: (m: string) => void }) {
           />
           <button
             onClick={create}
+            disabled={branchId.trim() === ""}
             className="rounded-xl bg-red-600 px-6 font-bold text-white"
           >
             สร้าง
@@ -499,7 +501,7 @@ function PermissionsTab({ onMessage }: { onMessage: (m: string) => void }) {
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [form, setForm] = useState({
     userId: "",
-    branchId: "HQ",
+    branchId: "",
     phone: "",
     allowedEventTypes: [] as string[],
     isTestRecipient: false,
@@ -548,6 +550,7 @@ function PermissionsTab({ onMessage }: { onMessage: (m: string) => void }) {
             value={form.branchId}
             onChange={(event) => setForm({ ...form, branchId: event.target.value })}
             placeholder="สาขา"
+            required
             className="rounded-xl border border-slate-300 p-3"
           />
         </div>
@@ -591,7 +594,7 @@ function PermissionsTab({ onMessage }: { onMessage: (m: string) => void }) {
         </label>
         <button
           onClick={save}
-          disabled={!form.userId}
+          disabled={!form.userId || form.branchId.trim() === ""}
           className="mt-3 w-full rounded-xl bg-red-600 p-3 font-bold text-white disabled:opacity-40"
         >
           บันทึกสิทธิ์
