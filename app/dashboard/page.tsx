@@ -60,13 +60,22 @@ export default function DashboardPage() {
 
   const loadSummary = useCallback(() => {
     staffGet<Summary>("/dashboard/summary")
-      .then((response) => setSummary(response.data))
+      .then((response) => {
+        setSummary(response.data);
+        setError("");
+      })
       .catch((err) => {
         if (err instanceof ApiError && err.status === 401) {
           clearStaffToken();
           clearAlertHost();
           router.push("/login");
+          return;
         }
+        // Anything else is told, not swallowed: a staff member without an
+        // Alert Permission (403 AU-403-003) would otherwise stare at "สาขา …"
+        // forever. The poll keeps running, so the page recovers on its own
+        // once an admin grants the Permission.
+        setError(summaryLoadMessage(err));
       });
   }, [router]);
 
@@ -153,6 +162,21 @@ export default function DashboardPage() {
       </p>
     </main>
   );
+}
+
+// What the dashboard says when the Branch summary cannot be loaded. The API's
+// own message is English and written for logs; the two answers a staff member
+// can act on get their own words.
+function summaryLoadMessage(err: unknown): string {
+  if (!(err instanceof ApiError)) return "ไม่สามารถโหลดข้อมูลสาขาได้";
+  if (err.code === "AU-403-003") {
+    return "คุณยังไม่มีสิทธิ์ Alert ในสาขาใด — ให้ผู้ดูแลระบบกำหนดสิทธิ์ (Permissions) ก่อนใช้งาน";
+  }
+  if (err.code === "AU-403-001") {
+    return "สิทธิ์ Alert ของคุณถูกปิดใช้งาน — ติดต่อผู้ดูแลระบบ";
+  }
+  if (err.status >= 500) return "ระบบสิทธิ์ตอบไม่ได้ชั่วคราว — กำลังลองใหม่";
+  return err.message || "ไม่สามารถโหลดข้อมูลสาขาได้";
 }
 
 function StatCard({
